@@ -1,0 +1,17 @@
+# Person Detection System Requirements
+
+# Core dependencies
+numpy>=1.21.0
+opencv-python>=4.5.0
+Pillow>=8.3.0
+
+# Web framework for API
+Flask>=2.0.0
+Werkzeug>=2.0.0
+
+# Optional: Enhanced face recognition capabilities
+# Uncomment the line below for better face recognition (requires opencv-contrib-python)
+# opencv-contrib-python>=4.5.0
+
+# Additional utilities
+pathlib2>=2.3.0; python_version < "3.4"

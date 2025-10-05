@@ -1,0 +1,19 @@
+[Unit]
+Description=Person Detection System
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/Person_detection
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=FLASK_ENV=production
+ExecStart=/usr/bin/python3 /path/to/Person_detection/deploy_production.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  person-detector:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount embeddings folder (should contain pre-generated embeddings)
+      - ./embeddings:/app/embeddings:ro
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
