@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Person Detection System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #4facfe;
+            background-color: #f8f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #4facfe;
+            background-color: #f0f8ff;
+        }
+        
+        .upload-icon {
+            font-size: 3em;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .detect-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: transform 0.2s ease;
+        }
+        
+        .detect-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .detect-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+        
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+        
+        .detection-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .person-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .person-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .confidence {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #c62828;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Person Detection System</h1>
+            <p>Upload an image to detect and identify persons</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📷</div>
+                    <h3>Upload Image</h3>
+                    <p>Drag and drop an image here or click to select</p>
+                    <input type="file" id="imageInput" class="file-input" accept="image/*">
+                    <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                        Choose Image
+                    </button>
+                </div>
+                
+                <button class="detect-btn" id="detectBtn" onclick="detectPersons()" disabled>
+                    🚀 Detect Persons
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing image...</p>
+            </div>
+            
+            <div class="results" id="results">
+                <h3>Detection Results</h3>
+                <div id="resultImage"></div>
+                <div id="detectionInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        
+        // File input handling
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            handleFileSelect(e.target.files[0]);
+        });
+        
+        // Drag and drop handling
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+        
+        function handleFileSelect(file) {
+            if (file && file.type.startsWith('image/')) {
+                selectedFile = file;
+                document.getElementById('detectBtn').disabled = false;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadArea.innerHTML = `
+                        <div class="upload-icon">✅</div>
+                        <h3>Image Selected</h3>
+                        <p>${file.name}</p>
+                        <img src="${e.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin: 10px 0;">
+                        <br><button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                            Choose Different Image
+                        </button>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please select a valid image file.');
+            }
+        }
+        
+        async function detectPersons() {
+            if (!selectedFile) return;
+            
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const detectBtn = document.getElementById('detectBtn');
+            
+            // Show loading
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            detectBtn.disabled = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+                formData.append('tolerance', '0.6');
+                
+                const response = await fetch('/detect_with_image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResults(result);
+                } else {
+                    showError(result.message || 'Detection failed');
+                }
+                
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                detectBtn.disabled = false;
+            }
+        }
+        
+        function displayResults(result) {
+            const results = document.getElementById('results');
+            const resultImage = document.getElementById('resultImage');
+            const detectionInfo = document.getElementById('detectionInfo');
+            
+            // Show results
+            results.style.display = 'block';
+            
+            // Display the processed image from server
+            if (result.processed_image) {
+                resultImage.innerHTML = `
+                    <h4>Result Image with Detections</h4>
+                    <img src="${result.processed_image}" class="result-image" alt="Detection Result">
+                `;
+            } else {
+                resultImage.innerHTML = `
+                    <h4>Original Image</h4>
+                    <img src="${URL.createObjectURL(selectedFile)}" class="result-image" alt="Original Image">
+                `;
+            }
+            
+            // Display detection info
+            let infoHTML = `
+                <div class="success">
+                    <strong>✅ Detection Complete!</strong><br>
+                    Found ${result.persons_found} person(s) in the image
+                </div>
+            `;
+            
+            if (result.detections.length > 0) {
+                infoHTML += '<h4>Detected Persons:</h4>';
+                result.detections.forEach((detection, index) => {
+                    const { person_name, confidence, face_location } = detection;
+                    const color = person_name !== 'Unknown' ? '#4CAF50' : '#F44336';
+                    
+                    infoHTML += `
+                        <div class="person-item" style="border-left-color: ${color}">
+                            <div class="person-name">${person_name}</div>
+                            <div class="confidence">Confidence: ${(confidence * 100).toFixed(1)}%</div>
+                            <div class="confidence">Location: (${face_location.left}, ${face_location.top}) to (${face_location.right}, ${face_location.bottom})</div>
+                        </div>
+                    `;
+                });
+            } else {
+                infoHTML += '<div class="error">No persons detected in the image</div>';
+            }
+            
+            detectionInfo.innerHTML = infoHTML;
+        }
+        
+        function showError(message) {
+            const results = document.getElementById('results');
+            const detectionInfo = document.getElementById('detectionInfo');
+            
+            results.style.display = 'block';
+            detectionInfo.innerHTML = `
+                <div class="error">
+                    <strong>❌ Error:</strong><br>
+                    ${message}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
